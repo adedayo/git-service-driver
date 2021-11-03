@@ -31,11 +31,12 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	gitlab "github.com/adedayo/gitlab-driver/pkg"
+	"github.com/adedayo/git-service-driver/pkg/github"
+	"github.com/adedayo/git-service-driver/pkg/gitlab"
+
 	"github.com/spf13/cobra"
 
 	homedir "github.com/mitchellh/go-homedir"
@@ -62,23 +63,8 @@ func Execute() {
 		os.Exit(1)
 	}
 
-	listRepositories()
-
 }
 
-func listRepositories() {
-
-	projects, err := gitlab.GetRepositories(context.Background(), gitlab.GitlabService{
-		GraphQLEndPoint: viper.GetString(gitlab.GITLAB_GRAHPQL_ENDPOINT),
-		API_Key:         viper.GetString(gitlab.GITLAB_API_KEY),
-	})
-	if err != nil {
-		fmt.Printf("Error: %v", err)
-	}
-
-	fmt.Printf("%v\n", projects)
-
-}
 func init() {
 	cobra.OnInitialize(initConfig)
 
@@ -94,6 +80,8 @@ func init() {
 	viper.SetEnvPrefix("cm")
 	viper.BindEnv(gitlab.GITLAB_GRAHPQL_ENDPOINT)
 	viper.BindEnv(gitlab.GITLAB_API_KEY)
+	viper.BindEnv(github.GITHUB_GRAHPQL_ENDPOINT)
+	viper.BindEnv(github.GITHUB_API_KEY)
 
 }
 

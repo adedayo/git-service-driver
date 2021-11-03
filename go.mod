@@ -1,4 +1,4 @@
-module github.com/adedayo/gitlab-driver
+module github.com/adedayo/git-service-driver
 
 go 1.17
 
@@ -11,26 +11,44 @@ require (
 )
 
 require (
+	github.com/Microsoft/go-winio v0.5.1 // indirect
+	github.com/alcortesm/tgz v0.0.0-20161220082320-9c5fe88206d7 // indirect
+	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/jessevdk/go-flags v1.5.0 // indirect
+	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/kr/pretty v0.3.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.2 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/rogpeppe/go-internal v1.8.0 // indirect
+	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/src-d/gcfg v1.4.0 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/xanzy/ssh-agent v0.3.1 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20211101193420-4a448f8816b3 // indirect
 	golang.org/x/sys v0.0.0-20211102192858-4dd72447c267 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.63.2 // indirect
+	gopkg.in/src-d/go-billy.v4 v4.3.2 // indirect
+	gopkg.in/src-d/go-git-fixtures.v3 v3.5.0 // indirect
+	gopkg.in/src-d/go-git.v4 v4.13.1 // indirect
+	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )

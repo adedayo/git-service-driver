@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	model "github.com/adedayo/git-service-driver/pkg"
 	"github.com/hasura/go-graphql-client"
 	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
 
-func GetRepositories(ctx context.Context, gLab GitlabService) (projects []GitLabProject, err error) {
+func GetRepositories(ctx context.Context, gLab model.GitService) (projects []GitLabProject, err error) {
 
 	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: viper.GetString(GITLAB_API_KEY)}))

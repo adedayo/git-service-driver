@@ -30,7 +30,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 package main
 
-import "github.com/adedayo/gitlab-driver/cmd"
+import "github.com/adedayo/git-service-driver/cmd"
 
 func main() {
 	cmd.Execute()
