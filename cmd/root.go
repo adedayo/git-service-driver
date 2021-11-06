@@ -47,7 +47,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "gitlab-driver",
+	Use:   "git-service-driver",
 	Short: "APIs for interacting with GitLab.",
 	Long:  `Provides a set of APIs that CheckMate uses to interact with GitLab.`,
 	// Uncomment the following line if your bare application
@@ -62,7 +62,6 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-
 }
 
 func init() {
@@ -87,8 +86,6 @@ func init() {
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	fmt.Printf("Initialising")
-
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
