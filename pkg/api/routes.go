@@ -6,9 +6,12 @@ import (
 	"net/http"
 	"strings"
 
+	model "github.com/adedayo/git-service-driver/pkg"
 	gitutils "github.com/adedayo/git-service-driver/pkg/git"
+	"github.com/adedayo/git-service-driver/pkg/gitlab"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 )
 
 type GitServiceName int
@@ -50,8 +53,30 @@ func allowedOriginValidator(origin string) bool {
 }
 
 func addRoutes() {
-	routes.HandleFunc("/github/clone", cloneFromService(GitHub)).Methods("POST")
-	routes.HandleFunc("/gitlab/clone", cloneFromService(GitLab)).Methods("POST")
+	for _, rs := range GetRoutes() {
+		routes.HandleFunc(rs.Path, rs.Handler).Methods(rs.Methods...)
+	}
+}
+
+func GetRoutes() []RouteSpec {
+	routeSpecs := []RouteSpec{
+		{
+			Path:    "/github/clone",
+			Handler: cloneFromService(GitHub),
+			Methods: []string{"POST"},
+		},
+		{
+			Path:    "/gitlab/clone",
+			Handler: cloneFromService(GitLab),
+			Methods: []string{"POST"},
+		},
+		{
+			Path:    "/gitlab/discover",
+			Handler: discoverGitLab,
+			Methods: []string{"GET"},
+		},
+	}
+	return routeSpecs
 }
 
 func cloneFromService(service GitServiceName) func(w http.ResponseWriter, r *http.Request) {
@@ -82,4 +107,18 @@ func cloneFromService(service GitServiceName) func(w http.ResponseWriter, r *htt
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(path)
 	}
+}
+
+func discoverGitLab(w http.ResponseWriter, r *http.Request) {
+	proj, err := gitlab.GetRepositories(r.Context(), model.GitService{
+		GraphQLEndPoint: viper.GetString(gitlab.GITLAB_GRAHPQL_ENDPOINT),
+		API_Key:         viper.GetString(gitlab.GITLAB_API_KEY),
+	})
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(proj)
 }
