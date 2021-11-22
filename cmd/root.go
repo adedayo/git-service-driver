@@ -32,6 +32,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/adedayo/git-service-driver/pkg/github"
@@ -89,15 +90,16 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".gitlab-driver" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".gitlab-driver")
+		viper.SetConfigName("checkmate")
+		viper.SetConfigType("yaml")
+		viper.AddConfigPath(home + "/.checkmate/config")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		log.Println("Using config file:", viper.ConfigFileUsed())
 	}
+
 }

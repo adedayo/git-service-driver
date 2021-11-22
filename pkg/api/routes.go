@@ -1,7 +1,9 @@
 package api
 
 import (
+	"crypto/sha1"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -11,7 +13,6 @@ import (
 	"github.com/adedayo/git-service-driver/pkg/gitlab"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/spf13/viper"
 )
 
 type GitServiceName int
@@ -33,6 +34,8 @@ var (
 		handlers.AllowCredentials(),
 		handlers.AllowedOriginValidator(allowedOriginValidator),
 	}
+
+	configManager = model.MakeConfigManager()
 )
 
 func init() {
@@ -61,18 +64,28 @@ func addRoutes() {
 func GetRoutes() []RouteSpec {
 	routeSpecs := []RouteSpec{
 		{
-			Path:    "/github/clone",
+			Path:    "/api/github/clone",
 			Handler: cloneFromService(GitHub),
 			Methods: []string{"POST"},
 		},
 		{
-			Path:    "/gitlab/clone",
+			Path:    "/api/gitlab/clone",
 			Handler: cloneFromService(GitLab),
 			Methods: []string{"POST"},
 		},
 		{
-			Path:    "/gitlab/discover",
+			Path:    "/api/gitlab/discover",
 			Handler: discoverGitLab,
+			Methods: []string{"GET"},
+		},
+		{
+			Path:    "/api/gitlab/integrate",
+			Handler: integrateGitLab,
+			Methods: []string{"POST"},
+		},
+		{
+			Path:    "/api/gitlab/integrations",
+			Handler: getGitLabIntegrations,
 			Methods: []string{"GET"},
 		},
 	}
@@ -110,15 +123,54 @@ func cloneFromService(service GitServiceName) func(w http.ResponseWriter, r *htt
 }
 
 func discoverGitLab(w http.ResponseWriter, r *http.Request) {
-	proj, err := gitlab.GetRepositories(r.Context(), model.GitService{
-		GraphQLEndPoint: viper.GetString(gitlab.GITLAB_GRAHPQL_ENDPOINT),
-		API_Key:         viper.GetString(gitlab.GITLAB_API_KEY),
-	})
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	results := []gitlab.GitLabProject{}
+	config := configManager.GetConfig()
+
+	for _, v := range config.GitServices[model.GitLab] {
+		proj, err := gitlab.GetRepositories(r.Context(), model.GitService{
+			GraphQLEndPoint: v.GraphQLEndPoint,
+			API_Key:         v.API_Key,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		results = append(results, proj...)
 	}
 
-	json.NewEncoder(w).Encode(proj)
+	json.NewEncoder(w).Encode(results)
+}
+
+func integrateGitLab(w http.ResponseWriter, r *http.Request) {
+	var detail model.GitService
+	if err := json.NewDecoder(r.Body).Decode(&detail); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	detail.GraphQLEndPoint = detail.GraphQLEndPoint + "/api/graphql"
+	detail.ID = fmt.Sprintf("%x", sha1.New().Sum([]byte(detail.GraphQLEndPoint)))
+	detail.Type = model.GitLab
+	config := configManager.GetConfig()
+	config.AddService(&detail)
+	json.NewEncoder(w).Encode(listIntegrations(model.GitLab))
+}
+
+func getGitLabIntegrations(w http.ResponseWriter, r *http.Request) {
+
+	json.NewEncoder(w).Encode(listIntegrations(model.GitLab))
+}
+
+func listIntegrations(sType model.GitServiceType) []model.GitService {
+	config := configManager.GetConfig()
+	services := config.GitServices[sType]
+	out := []model.GitService{}
+	for _, v := range services {
+		out = append(out, model.GitService{
+			GraphQLEndPoint: v.GraphQLEndPoint,
+			ID:              v.ID,
+		})
+	}
+
+	return out
 }
