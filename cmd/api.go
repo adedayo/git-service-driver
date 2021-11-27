@@ -31,8 +31,8 @@ POSSIBILITY OF SUCH DAMAGE.
 package cmd
 
 import (
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 	"github.com/adedayo/git-service-driver/pkg/api"
-	gitutils "github.com/adedayo/git-service-driver/pkg/git"
 	"github.com/adedayo/git-service-driver/pkg/github"
 	"github.com/adedayo/git-service-driver/pkg/gitlab"
 

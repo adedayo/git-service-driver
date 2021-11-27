@@ -85,3 +85,8 @@ type GitLabProject struct {
 		}
 	}
 }
+
+type GitLabProjectSearchResult struct {
+	InstanceID string
+	Projects   []GitLabProject
+}

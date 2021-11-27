@@ -1,10 +1,12 @@
 package model
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
 
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
 )
@@ -21,9 +23,20 @@ const (
 )
 
 type GitService struct {
-	GraphQLEndPoint, API_Key string
-	ID                       string //some unique ID for this service instance
-	Type                     GitServiceType
+	InstanceURL     string
+	GraphQLEndPoint string
+	APIEndPoint     string
+	API_Key         string
+	ID              string         //some unique ID for this service instance
+	Name            string         //user-friendly name
+	Type            GitServiceType `json:"_"`
+}
+
+func (svc GitService) MakeAuth() *gitutils.GitAuth {
+	return &gitutils.GitAuth{
+		User:       gitutils.CHECKMATE_USER,
+		Credential: svc.API_Key,
+	}
 }
 
 type GitServiceConfig struct {
@@ -32,13 +45,31 @@ type GitServiceConfig struct {
 }
 
 func (gsc GitServiceConfig) IsServiceConfigured(service GitServiceType) bool {
-
-	log.Printf("%#v", gsc.GitServices)
-
 	if services, present := gsc.GitServices[service]; present && len(services) > 0 {
 		return true
 	}
 	return false
+}
+
+func (gsc GitServiceConfig) GetService(serviceType GitServiceType, serviceID string) (*GitService, error) {
+	if services, exist := gsc.GitServices[serviceType]; exist {
+		if service, found := services[serviceID]; found {
+			return service, nil
+		} else {
+			return &GitService{}, fmt.Errorf("git service with ID %s not found", serviceID)
+		}
+	} else {
+		return &GitService{}, fmt.Errorf("git service not configured")
+	}
+}
+
+func (gsc GitServiceConfig) FindService(serviceID string) (*GitService, error) {
+	for _, v := range gsc.GitServices {
+		if service, found := v[serviceID]; found {
+			return service, nil
+		}
+	}
+	return &GitService{}, fmt.Errorf("git service with ID %s not found", serviceID)
 }
 
 func (gsc *GitServiceConfig) AddService(service *GitService) error {

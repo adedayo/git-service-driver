@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	gitutils "github.com/adedayo/git-service-driver/pkg/git"
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 )
 
 type Config struct {

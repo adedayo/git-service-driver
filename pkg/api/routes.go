@@ -1,25 +1,18 @@
 package api
 
 import (
-	"crypto/sha1"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
+	"github.com/adedayo/checkmate-core/pkg/util"
 	model "github.com/adedayo/git-service-driver/pkg"
-	gitutils "github.com/adedayo/git-service-driver/pkg/git"
 	"github.com/adedayo/git-service-driver/pkg/gitlab"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-)
-
-type GitServiceName int
-
-const (
-	GitHub GitServiceName = iota
-	GitLab
 )
 
 var (
@@ -65,12 +58,12 @@ func GetRoutes() []RouteSpec {
 	routeSpecs := []RouteSpec{
 		{
 			Path:    "/api/github/clone",
-			Handler: cloneFromService(GitHub),
+			Handler: cloneFromService(model.GitHub),
 			Methods: []string{"POST"},
 		},
 		{
 			Path:    "/api/gitlab/clone",
-			Handler: cloneFromService(GitLab),
+			Handler: cloneFromService(model.GitLab),
 			Methods: []string{"POST"},
 		},
 		{
@@ -84,6 +77,11 @@ func GetRoutes() []RouteSpec {
 			Methods: []string{"POST"},
 		},
 		{
+			Path:    "/api/gitlab/deleteintegration",
+			Handler: deleteGitLabIntegration,
+			Methods: []string{"POST"},
+		},
+		{
 			Path:    "/api/gitlab/integrations",
 			Handler: getGitLabIntegrations,
 			Methods: []string{"GET"},
@@ -92,24 +90,24 @@ func GetRoutes() []RouteSpec {
 	return routeSpecs
 }
 
-func cloneFromService(service GitServiceName) func(w http.ResponseWriter, r *http.Request) {
+func cloneFromService(service model.GitServiceType) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var auth *gitutils.GitAuth
-		switch service {
-		case GitHub:
-			auth = gitHubAuth
-		case GitLab:
-			auth = gitLabAuth
-		default:
-			auth = &gitutils.GitAuth{}
-		}
 
 		var spec gitutils.RepositoryCloneSpec
 		if err := json.NewDecoder(r.Body).Decode(&spec); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		spec.Options.Auth = auth
+
+		service, err := configManager.GetConfig().GetService(service, spec.ServiceID)
+
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		spec.Options.Auth = service.MakeAuth()
+
 		path, err := gitutils.Clone(r.Context(), spec.Repository, &spec.Options)
 
 		if err != nil {
@@ -124,7 +122,7 @@ func cloneFromService(service GitServiceName) func(w http.ResponseWriter, r *htt
 
 func discoverGitLab(w http.ResponseWriter, r *http.Request) {
 
-	results := []gitlab.GitLabProject{}
+	results := []gitlab.GitLabProjectSearchResult{}
 	config := configManager.GetConfig()
 
 	for _, v := range config.GitServices[model.GitLab] {
@@ -136,7 +134,11 @@ func discoverGitLab(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		results = append(results, proj...)
+
+		results = append(results, gitlab.GitLabProjectSearchResult{
+			InstanceID: v.ID,
+			Projects:   proj,
+		})
 	}
 
 	json.NewEncoder(w).Encode(results)
@@ -148,16 +150,33 @@ func integrateGitLab(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	detail.GraphQLEndPoint = detail.GraphQLEndPoint + "/api/graphql"
-	detail.ID = fmt.Sprintf("%x", sha1.New().Sum([]byte(detail.GraphQLEndPoint)))
+	detail.InstanceURL = strings.TrimSuffix(strings.TrimSpace(detail.InstanceURL), "/")
+	detail.GraphQLEndPoint = detail.InstanceURL + "/api/graphql"
+	detail.APIEndPoint = detail.InstanceURL + "/api"
+	detail.ID = util.NewRandomUUID().String()
 	detail.Type = model.GitLab
+	// fmt.Printf("Got Integration: %#v\n", detail)
 	config := configManager.GetConfig()
 	config.AddService(&detail)
 	json.NewEncoder(w).Encode(listIntegrations(model.GitLab))
 }
 
-func getGitLabIntegrations(w http.ResponseWriter, r *http.Request) {
+func deleteGitLabIntegration(w http.ResponseWriter, r *http.Request) {
+	var id struct {
+		ID string
+	}
+	if err := json.NewDecoder(r.Body).Decode(&id); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
+	config := configManager.GetConfig()
+	delete(config.GitServices[model.GitLab], id.ID)
+	configManager.SaveConfig(config)
+	json.NewEncoder(w).Encode(listIntegrations(model.GitLab))
+}
+
+func getGitLabIntegrations(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(listIntegrations(model.GitLab))
 }
 
@@ -169,8 +188,25 @@ func listIntegrations(sType model.GitServiceType) []model.GitService {
 		out = append(out, model.GitService{
 			GraphQLEndPoint: v.GraphQLEndPoint,
 			ID:              v.ID,
+			InstanceURL:     v.InstanceURL,
+			Name:            v.Name,
 		})
 	}
 
+	sort.Sort(gitServiceList(out))
 	return out
+}
+
+type gitServiceList []model.GitService
+
+func (gs gitServiceList) Len() int {
+	return len(gs)
+}
+
+func (gs gitServiceList) Less(i, j int) bool {
+	return gs[i].Name < gs[j].Name || (gs[i].Name == gs[j].Name && gs[i].InstanceURL < gs[j].InstanceURL)
+}
+
+func (gs gitServiceList) Swap(i, j int) {
+	gs[i], gs[j] = gs[j], gs[i]
 }
