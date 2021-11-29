@@ -69,7 +69,7 @@ func GetRoutes() []RouteSpec {
 		{
 			Path:    "/api/gitlab/discover",
 			Handler: discoverGitLab,
-			Methods: []string{"GET"},
+			Methods: []string{"POST"},
 		},
 		{
 			Path:    "/api/gitlab/integrate",
@@ -122,26 +122,42 @@ func cloneFromService(service model.GitServiceType) func(w http.ResponseWriter, 
 
 func discoverGitLab(w http.ResponseWriter, r *http.Request) {
 
-	results := []gitlab.GitLabProjectSearchResult{}
 	config := configManager.GetConfig()
+	var pagedSearch gitlab.GitLabPagedSearch
 
-	for _, v := range config.GitServices[model.GitLab] {
-		proj, err := gitlab.GetRepositories(r.Context(), model.GitService{
-			GraphQLEndPoint: v.GraphQLEndPoint,
-			API_Key:         v.API_Key,
-		})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		results = append(results, gitlab.GitLabProjectSearchResult{
-			InstanceID: v.ID,
-			Projects:   proj,
-		})
+	if err := json.NewDecoder(r.Body).Decode(&pagedSearch); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
-	json.NewEncoder(w).Encode(results)
+	// log.Printf("PagedSearch: %v\n", pagedSearch)
+
+	v, err := config.FindService(pagedSearch.ServiceID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// log.Printf("Service: %v\n", v)
+
+	proj, loc, err := gitlab.GetRepositories(r.Context(), model.GitService{
+		GraphQLEndPoint: v.GraphQLEndPoint,
+		API_Key:         v.API_Key,
+	}, pagedSearch)
+
+	// log.Printf("Projs: %v\n", proj)
+
+	if err != nil {
+		log.Printf("Error: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(gitlab.GitLabProjectSearchResult{
+		InstanceID:  v.ID,
+		Projects:    proj,
+		EndCursor:   loc.EndCursor,
+		HasNextPage: loc.HasNextPage,
+	})
 }
 
 func integrateGitLab(w http.ResponseWriter, r *http.Request) {
