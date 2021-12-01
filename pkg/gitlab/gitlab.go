@@ -3,42 +3,27 @@ package gitlab
 import (
 	"context"
 	"fmt"
+	"log"
 
 	model "github.com/adedayo/git-service-driver/pkg"
-	"github.com/hasura/go-graphql-client"
-	"github.com/spf13/viper"
-	"golang.org/x/oauth2"
 )
 
-func GetRepositories(ctx context.Context, gLab model.GitService, pagedSearch GitLabPagedSearch) (projects []GitLabProject, loc GitLabCursorLocation, err error) {
-
-	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: viper.GetString(GITLAB_API_KEY)}))
-	client := graphql.NewClient(gLab.GraphQLEndPoint, httpClient)
-	var query projectQuery
-
-	variables := map[string]interface{}{
-		"endCursor": (*graphql.String)(nil),
-	}
-
-	if pagedSearch.NextCursor != "" {
-		variables["endCursor"] = graphql.String(pagedSearch.NextCursor)
-	}
+func GetRepositories(ctx context.Context, gLab *model.GitService, pagedSearch *GitLabPagedSearch) (projects []GitLabProject, loc GitLabCursorLocation, err error) {
 
 	for len(projects) < pagedSearch.PageSize {
-		err = client.Query(ctx, &query, variables)
+		query := fmt.Sprintf(projectsQuery, pagedSearch.First, pagedSearch.NextCursor)
+		projs, err := QueryProjects(ctx, query, gLab)
 		if err != nil {
-			fmt.Printf("Error: %v\n", err)
+			log.Printf("Error: %v\n", err)
 			break
 		} else {
-			// log.Printf("Projects %v\nCursor: %s\n", query.Projects.Nodes, graphql.String(query.Projects.PageInfo.EndCursor))
-			loc.EndCursor = graphql.String(query.Projects.PageInfo.EndCursor)
-			loc.HasNextPage = query.Projects.PageInfo.HasNextPage
-			projects = append(projects, query.Projects.Nodes...)
+			loc.EndCursor = projs.PageInfo.EndCursor
+			loc.HasNextPage = projs.PageInfo.HasNextPage
+			projects = append(projects, projs.Nodes...)
 			if !loc.HasNextPage {
 				break
 			}
-			variables["endCursor"] = loc.EndCursor
+			pagedSearch.NextCursor = loc.EndCursor
 		}
 	}
 
@@ -48,10 +33,11 @@ func GetRepositories(ctx context.Context, gLab model.GitService, pagedSearch Git
 type GitLabPagedSearch struct {
 	ServiceID  string
 	PageSize   int
+	First      int //(first: n, ...) in the query
 	NextCursor string
 }
 
 type GitLabCursorLocation struct {
-	EndCursor   graphql.String
-	HasNextPage graphql.Boolean
+	EndCursor   string
+	HasNextPage bool
 }

@@ -132,17 +132,14 @@ func discoverGitLab(w http.ResponseWriter, r *http.Request) {
 
 	// log.Printf("PagedSearch: %v\n", pagedSearch)
 
-	v, err := config.FindService(pagedSearch.ServiceID)
+	gitService, err := config.FindService(pagedSearch.ServiceID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	// log.Printf("Service: %v\n", v)
 
-	proj, loc, err := gitlab.GetRepositories(r.Context(), model.GitService{
-		GraphQLEndPoint: v.GraphQLEndPoint,
-		API_Key:         v.API_Key,
-	}, pagedSearch)
+	proj, loc, err := gitlab.GetRepositories(r.Context(), gitService, &pagedSearch)
 
 	// log.Printf("Projs: %v\n", proj)
 
@@ -153,7 +150,7 @@ func discoverGitLab(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(gitlab.GitLabProjectSearchResult{
-		InstanceID:  v.ID,
+		InstanceID:  gitService.ID,
 		Projects:    proj,
 		EndCursor:   loc.EndCursor,
 		HasNextPage: loc.HasNextPage,
