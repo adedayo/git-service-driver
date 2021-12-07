@@ -1,10 +1,12 @@
 package api
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 
 	gitutils "github.com/adedayo/checkmate-core/pkg/git"
@@ -130,18 +132,13 @@ func discoverGitLab(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// log.Printf("PagedSearch: %v\n", pagedSearch)
-
 	gitService, err := config.FindService(pagedSearch.ServiceID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// log.Printf("Service: %v\n", v)
 
 	proj, loc, err := gitlab.GetRepositories(r.Context(), gitService, &pagedSearch)
-
-	// log.Printf("Projs: %v\n", proj)
 
 	if err != nil {
 		log.Printf("Error: %v\n", err)
@@ -150,11 +147,35 @@ func discoverGitLab(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(gitlab.GitLabProjectSearchResult{
-		InstanceID:  gitService.ID,
-		Projects:    proj,
-		EndCursor:   loc.EndCursor,
-		HasNextPage: loc.HasNextPage,
+		InstanceID:             gitService.ID,
+		Projects:               proj,
+		EndCursor:              loc.EndCursor,
+		HasNextPage:            loc.HasNextPage,
+		RemainingProjectsCount: getCount(loc),
 	})
+}
+
+func getCount(loc gitlab.GitLabCursorLocation) int64 {
+	if loc.HasNextPage {
+		if x, err := base64.RawStdEncoding.DecodeString(loc.EndCursor); err == nil {
+			var out struct {
+				ID string `json:"id"`
+			}
+			if e := json.Unmarshal(x, &out); e == nil {
+				n, err := strconv.ParseInt(out.ID, 10, 0)
+				if err != nil {
+					log.Printf("%v", e)
+					return 0
+				}
+				return n
+			} else {
+				log.Printf("%v", e)
+			}
+		} else {
+			log.Printf("%v", err)
+		}
+	}
+	return 0
 }
 
 func integrateGitLab(w http.ResponseWriter, r *http.Request) {

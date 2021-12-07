@@ -31,7 +31,7 @@ func QueryProjects(ctx context.Context, query string, gitService *model.GitServi
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", gitService.API_Key))
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := ctxhttp.Do(context.Background(), http.DefaultClient, req)
+	resp, err := ctxhttp.Do(ctx, http.DefaultClient, req)
 	if err != nil {
 		log.Printf("%v", err)
 		return

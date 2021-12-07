@@ -5,7 +5,6 @@ const (
 		    projects(first: %d, after: "%s") {
 		      nodes {
 		        name
-		        description
 		        id
 		        archived
 		        httpUrlToRepo
@@ -15,7 +14,6 @@ const (
 		        group {
 		          id
 		          name
-		          description
 		        }
 		      }
 		      pageInfo {
@@ -25,6 +23,31 @@ const (
 		    }
 		  }
 	`
+
+// 	projectsQuery = `{
+// 		projects(first: %d, after: "%s") {
+// 		  nodes {
+// 			name
+// 			description
+// 			id
+// 			archived
+// 			httpUrlToRepo
+// 			repository {
+// 			  branchNames(offset: 0, searchPattern: "*", limit: 1000)
+// 			}
+// 			group {
+// 			  id
+// 			  name
+// 			  description
+// 			}
+// 		  }
+// 		  pageInfo {
+// 			endCursor
+// 			hasNextPage
+// 		  }
+// 		}
+// 	  }
+// `
 )
 
 type projectsQueryResult struct {
@@ -51,10 +74,11 @@ type GitLabProject struct {
 	}
 }
 type GitLabProjectSearchResult struct {
-	InstanceID  string
-	Projects    []GitLabProject
-	EndCursor   string
-	HasNextPage bool
+	InstanceID             string
+	Projects               []GitLabProject
+	EndCursor              string
+	HasNextPage            bool
+	RemainingProjectsCount int64 //how many projects remain after this qeury cursor
 }
 
 // type GitLabProjects struct {
