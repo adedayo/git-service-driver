@@ -30,35 +30,28 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 package main
 
-import (
-	"context"
-	"fmt"
-	"log"
-
-	model "github.com/adedayo/git-service-driver/pkg"
-	"github.com/adedayo/git-service-driver/pkg/gitlab"
-)
+import "github.com/adedayo/git-service-driver/cmd"
 
 func main() {
 
-	paged := gitlab.GitLabPagedSearch{
-		ServiceID:  "e6584c4f-9aa4-402f-8650-52cbf496c9f4",
-		PageSize:   1000,
-		First:      7,
-		NextCursor: "",
-	}
-	config := model.MakeConfigManager().GetConfig()
-	v, err := config.FindService(paged.ServiceID)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return
-	}
+	// paged := gitlab.GitLabPagedSearch{
+	// 	ServiceID:  "e6584c4f-9aa4-402f-8650-52cbf496c9f4",
+	// 	PageSize:   1000,
+	// 	First:      7,
+	// 	NextCursor: "",
+	// }
+	// config := model.MakeConfigManager().GetConfig()
+	// v, err := config.FindService(paged.ServiceID)
+	// if err != nil {
+	// 	log.Printf("Error: %v\n", err)
+	// 	return
+	// }
 
-	projs, loc, err := gitlab.GetRepositories(context.Background(), v, &paged)
-	if err != nil {
-		log.Printf("Error: %v\n", err)
-		return
-	}
-	fmt.Printf("Loc: %v\nProjs: %v\n", loc, projs)
-	// cmd.Execute()
+	// projs, loc, err := gitlab.GetRepositories(context.Background(), v, &paged)
+	// if err != nil {
+	// 	log.Printf("Error: %v\n", err)
+	// 	return
+	// }
+	// fmt.Printf("Loc: %v\nProjs: %v\n", loc, projs)
+	cmd.Execute()
 }
