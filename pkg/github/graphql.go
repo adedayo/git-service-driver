@@ -1,4 +1,4 @@
-package gitlab
+package github
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"golang.org/x/net/context/ctxhttp"
 )
 
-func queryProjects(ctx context.Context, query string, gitService *model.GitService) (projects projectsQueryResult, err error) {
+func queryProjects(ctx context.Context, query string, gitService *model.GitService) (projects projectsQueryResultGH, err error) {
 	in := struct {
 		Query     string                 `json:"query"`
 		Variables map[string]interface{} `json:"variables,omitempty"`
@@ -29,7 +29,7 @@ func queryProjects(ctx context.Context, query string, gitService *model.GitServi
 	if err != nil {
 		return
 	}
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", gitService.API_Key))
+	req.Header.Set("Authorization", fmt.Sprintf("bearer %s", gitService.API_Key))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := ctxhttp.Do(ctx, http.DefaultClient, req)
 	if err != nil {
@@ -37,15 +37,26 @@ func queryProjects(ctx context.Context, query string, gitService *model.GitServi
 		return
 	}
 	defer resp.Body.Close()
+
 	var out struct {
 		Data struct {
-			Projects projectsQueryResult
+			User struct {
+				Repositories projectsQueryResultGH
+			}
+			Organization struct {
+				Repositories projectsQueryResultGH
+			}
 		}
 	}
 
 	err = json.NewDecoder(resp.Body).Decode(&out)
 	if err == nil {
-		projects = out.Data.Projects
+		if len(out.Data.Organization.Repositories.Nodes) == 0 {
+			projects = out.Data.User.Repositories
+		} else {
+			projects = out.Data.Organization.Repositories
+
+		}
 	}
 	return
 }
