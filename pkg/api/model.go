@@ -7,10 +7,11 @@ import (
 )
 
 type Config struct {
-	ApiPort    int
-	GitLabAuth gitutils.GitAuth
-	GitHubAuth gitutils.GitAuth
-	Local      bool //if set, to bind the api to localhost:port (electron) or simply :port (web service) instead
+	ApiPort     int
+	GitLabAuth  gitutils.GitAuth
+	GitHubAuth  gitutils.GitAuth
+	Local       bool   //if set, to bind the api to localhost:port (electron) or simply :port (web service) instead
+	CodeBaseDir string // the location where code is cloned into
 }
 
 type RouteSpec struct {

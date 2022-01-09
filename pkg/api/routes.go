@@ -25,13 +25,11 @@ var (
 		handlers.AllowCredentials(),
 		handlers.AllowedOriginValidator(allowedOriginValidator),
 	}
-
-	configManager = model.MakeConfigManager()
 )
 
-func init() {
-	addRoutes()
-}
+// func init() {
+// 	getRoutes()
+// }
 
 func allowedOriginValidator(origin string) bool {
 	for _, allowed := range allowedOrigins {
@@ -46,13 +44,16 @@ func allowedOriginValidator(origin string) bool {
 	return passCORS
 }
 
-func addRoutes() {
-	for _, rs := range GetRoutes() {
+func getRoutes(checkMateBaseDir string) *mux.Router {
+	for _, rs := range GetRoutes(checkMateBaseDir) {
 		routes.HandleFunc(rs.Path, rs.Handler).Methods(rs.Methods...)
 	}
+
+	return routes
 }
 
-func GetRoutes() []RouteSpec {
+func GetRoutes(checkMateBaseDir string) []RouteSpec {
+	configManager = model.MakeConfigManager(checkMateBaseDir)
 	routeSpecs := []RouteSpec{
 		{
 			Path:    "/api/github/clone",

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 
-	common "github.com/adedayo/checkmate-core/pkg"
 	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 	"gopkg.in/yaml.v3"
 )
@@ -126,15 +125,13 @@ type ConfigManager interface {
 	SaveConfig(*GitServiceConfig) error
 }
 
-func MakeConfigManager() ConfigManager {
-
-	location := path.Join(common.CHECKMATE_BASE_DIR, "config")
+func MakeConfigManager(configBaseDir string) ConfigManager {
 	cm := configManager{
-		configLocation: location,
+		configLocation: path.Join(configBaseDir, "config"),
 	}
 
-	//attempt to create the project location if it doesn't exist
-	os.MkdirAll(location, 0755)
+	//attempt to create the configuration location if it doesn't exist
+	os.MkdirAll(cm.configLocation, 0755)
 
 	return &cm
 }
