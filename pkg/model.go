@@ -6,8 +6,8 @@ import (
 	"os"
 	"path"
 
+	common "github.com/adedayo/checkmate-core/pkg"
 	gitutils "github.com/adedayo/checkmate-core/pkg/git"
-	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v3"
 )
 
@@ -127,11 +127,8 @@ type ConfigManager interface {
 }
 
 func MakeConfigManager() ConfigManager {
-	location := "."
-	if loc, err := homedir.Expand("~/.checkmate/config"); err == nil {
-		location = loc
-	}
 
+	location := path.Join(common.CHECKMATE_BASE_DIR, "config")
 	cm := configManager{
 		configLocation: location,
 	}
