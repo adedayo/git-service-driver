@@ -96,13 +96,14 @@ func (cm configManager) GetConfig() *GitServiceConfig {
 
 	file, err := os.Open(path.Join(cm.configLocation, GIT_SERVICE_CONFIG_FILE))
 	if err != nil {
-		log.Printf("Error opening Git Service Configuration: %v", err)
+		//create empty config instaed
+		cm.SaveConfig(conf)
 		return conf
 	}
 	defer file.Close()
 
 	if err := yaml.NewDecoder(file).Decode(conf); err != nil {
-		log.Printf("Error opening Git Service Configuration: %v", err)
+		log.Printf("Error decoding Git Service Configuration: %v", err)
 	}
 
 	return conf
