@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	model "github.com/adedayo/git-service-driver/pkg"
-	scheduler "github.com/adedayo/git-service-driver/pkg/cron"
 
 	"github.com/gorilla/handlers"
 )
@@ -17,10 +16,6 @@ var (
 
 //ServeAPI serves the analysis service on the specified port
 func ServeAPI(config Config) {
-
-	scheduler.Schedule("@every 5s", func() {
-		log.Printf("Printing another value")
-	})
 
 	hostPort := "localhost:%d"
 	if !config.Local {

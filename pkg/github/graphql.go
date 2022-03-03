@@ -57,6 +57,10 @@ func queryProjects(ctx context.Context, query string, gitService *model.GitServi
 			projects = out.Data.Organization.Repositories
 
 		}
+		for i, ghp := range projects.Nodes {
+			ghp.Url = fmt.Sprintf("%s.git", ghp.Url) //append a .git to the end to unify with Gitlab httpUrlToRepo
+			projects.Nodes[i] = ghp
+		}
 	}
 	return
 }
