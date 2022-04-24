@@ -3,6 +3,7 @@ package gitlab
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -31,7 +32,11 @@ func queryProjects(ctx context.Context, query string, gitService *model.GitServi
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", gitService.API_Key))
 	req.Header.Set("Content-Type", "application/json")
-	resp, err := ctxhttp.Do(ctx, http.DefaultClient, req)
+	resp, err := ctxhttp.Do(ctx, &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true, //support self-signed GitLab servers. TODO: make configurable
+		},
+	}}, req)
 	if err != nil {
 		log.Printf("%v", err)
 		return
