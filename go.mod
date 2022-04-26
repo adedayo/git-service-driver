@@ -3,7 +3,7 @@ module github.com/adedayo/git-service-driver
 go 1.17
 
 require (
-	github.com/adedayo/checkmate-core v0.3.2-0.20220425204236-673704cc2bbf
+	github.com/adedayo/checkmate-core v0.3.2
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/mitchellh/go-homedir v1.1.0

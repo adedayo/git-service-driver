@@ -70,7 +70,6 @@ func getCount(loc gitlab.GitLabCursorLocation) int64 {
 }
 
 func integrateGitLab(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Called the gitlab integrate")
 	var detail model.GitService
 	if err := json.NewDecoder(r.Body).Decode(&detail); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -81,8 +80,6 @@ func integrateGitLab(w http.ResponseWriter, r *http.Request) {
 	detail.APIEndPoint = detail.InstanceURL + "/api"
 	detail.ID = util.NewRandomUUID().String()
 	detail.Type = model.GitLab
-	log.Printf("Gitlab detail: %#v", detail)
-	// fmt.Printf("Got Integration: %#v\n", detail)
 	config := configManager.GetConfig()
 	if err := config.AddService(&detail); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
