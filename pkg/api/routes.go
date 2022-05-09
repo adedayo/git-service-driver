@@ -1,13 +1,10 @@
 package api
 
 import (
-	"encoding/json"
 	"log"
-	"net/http"
 	"sort"
 	"strings"
 
-	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 	model "github.com/adedayo/git-service-driver/pkg"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -55,16 +52,16 @@ func getRoutes(checkMateBaseDir string) *mux.Router {
 func GetRoutes(checkMateBaseDir string) []RouteSpec {
 	configManager = model.MakeConfigManager(checkMateBaseDir)
 	routeSpecs := []RouteSpec{
-		{
-			Path:    "/api/github/clone",
-			Handler: cloneFromService(model.GitHub),
-			Methods: []string{"POST"},
-		},
-		{
-			Path:    "/api/gitlab/clone",
-			Handler: cloneFromService(model.GitLab),
-			Methods: []string{"POST"},
-		},
+		// {
+		// 	Path:    "/api/github/clone",
+		// 	Handler: cloneFromService(model.GitHub),
+		// 	Methods: []string{"POST"},
+		// },
+		// {
+		// 	Path:    "/api/gitlab/clone",
+		// 	Handler: cloneFromService(model.GitLab),
+		// 	Methods: []string{"POST"},
+		// },
 		{
 			Path:    "/api/github/discover",
 			Handler: discoverGitHub,
@@ -109,35 +106,35 @@ func GetRoutes(checkMateBaseDir string) []RouteSpec {
 	return routeSpecs
 }
 
-func cloneFromService(service model.GitServiceType) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
+// func cloneFromService(service model.GitServiceType) func(w http.ResponseWriter, r *http.Request) {
+// 	return func(w http.ResponseWriter, r *http.Request) {
 
-		var spec gitutils.RepositoryCloneSpec
-		if err := json.NewDecoder(r.Body).Decode(&spec); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+// 		var spec gitutils.RepositoryCloneSpec
+// 		if err := json.NewDecoder(r.Body).Decode(&spec); err != nil {
+// 			http.Error(w, err.Error(), http.StatusBadRequest)
+// 			return
+// 		}
 
-		service, err := configManager.GetConfig().GetService(service, spec.ServiceID)
+// 		service, err := configManager.GetConfig().GetService(service, spec.ServiceID)
 
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusBadRequest)
+// 			return
+// 		}
 
-		spec.Options.Auth = service.MakeAuth()
+// 		spec.Options.Auth = service.MakeAuth()
 
-		path, err := gitutils.Clone(r.Context(), spec.Repository, &spec.Options)
+// 		path, err := gitutils.Clone(r.Context(), spec.Repository, &spec.Options)
 
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusBadRequest)
+// 			return
+// 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(path)
-	}
-}
+// 		w.Header().Set("Content-Type", "application/json")
+// 		json.NewEncoder(w).Encode(path)
+// 	}
+// }
 
 func listIntegrations(sType model.GitServiceType) []model.GitService {
 	config := configManager.GetConfig()
