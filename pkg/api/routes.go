@@ -5,7 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	model "github.com/adedayo/git-service-driver/pkg"
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
+	"github.com/adedayo/checkmate-core/pkg/projects"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -41,25 +42,29 @@ func allowedOriginValidator(origin string) bool {
 	return passCORS
 }
 
-func getRoutes(checkMateBaseDir string) *mux.Router {
-	for _, rs := range GetRoutes(checkMateBaseDir) {
+func getRoutes(pm projects.ProjectManager) *mux.Router {
+	for _, rs := range GetRoutes(pm) {
 		routes.HandleFunc(rs.Path, rs.Handler).Methods(rs.Methods...)
 	}
 
 	return routes
 }
 
-func GetRoutes(checkMateBaseDir string) []RouteSpec {
-	configManager = model.MakeConfigManager(checkMateBaseDir)
+func GetRoutes(pm projects.ProjectManager) []RouteSpec {
+	cm, err := pm.GetGitConfigManager()
+	if err != nil {
+		return []RouteSpec{}
+	}
+	configManager = cm
 	routeSpecs := []RouteSpec{
 		// {
 		// 	Path:    "/api/github/clone",
-		// 	Handler: cloneFromService(model.GitHub),
+		// 	Handler: cloneFromService(gitutils.GitHub),
 		// 	Methods: []string{"POST"},
 		// },
 		// {
 		// 	Path:    "/api/gitlab/clone",
-		// 	Handler: cloneFromService(model.GitLab),
+		// 	Handler: cloneFromService(gitutils.GitLab),
 		// 	Methods: []string{"POST"},
 		// },
 		{
@@ -106,7 +111,7 @@ func GetRoutes(checkMateBaseDir string) []RouteSpec {
 	return routeSpecs
 }
 
-// func cloneFromService(service model.GitServiceType) func(w http.ResponseWriter, r *http.Request) {
+// func cloneFromService(service gitutils.GitServiceType) func(w http.ResponseWriter, r *http.Request) {
 // 	return func(w http.ResponseWriter, r *http.Request) {
 
 // 		var spec gitutils.RepositoryCloneSpec
@@ -136,12 +141,16 @@ func GetRoutes(checkMateBaseDir string) []RouteSpec {
 // 	}
 // }
 
-func listIntegrations(sType model.GitServiceType) []model.GitService {
-	config := configManager.GetConfig()
+func listIntegrations(sType gitutils.GitServiceType) []gitutils.GitService {
+	config, err := configManager.GetConfig()
+	out := []gitutils.GitService{}
+
+	if err != nil {
+		return out
+	}
 	services := config.GitServices[sType]
-	out := []model.GitService{}
 	for _, v := range services {
-		out = append(out, model.GitService{
+		out = append(out, gitutils.GitService{
 			GraphQLEndPoint: v.GraphQLEndPoint,
 			ID:              v.ID,
 			InstanceURL:     v.InstanceURL,
@@ -155,7 +164,7 @@ func listIntegrations(sType model.GitServiceType) []model.GitService {
 	return out
 }
 
-type gitServiceList []model.GitService
+type gitServiceList []gitutils.GitService
 
 func (gs gitServiceList) Len() int {
 	return len(gs)

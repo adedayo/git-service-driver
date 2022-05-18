@@ -8,11 +8,11 @@ import (
 	"log"
 	"net/http"
 
-	model "github.com/adedayo/git-service-driver/pkg"
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 	"golang.org/x/net/context/ctxhttp"
 )
 
-func queryProjects(ctx context.Context, query string, gitService *model.GitService) (projects projectsQueryResultGH, err error) {
+func queryProjects(ctx context.Context, query string, gitService *gitutils.GitService) (projects projectsQueryResultGH, err error) {
 	in := struct {
 		Query     string                 `json:"query"`
 		Variables map[string]interface{} `json:"variables,omitempty"`

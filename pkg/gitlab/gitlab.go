@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	model "github.com/adedayo/git-service-driver/pkg"
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 )
 
-func GetRepositories(ctx context.Context, gLab *model.GitService, pagedSearch *GitLabPagedSearch) (projects []GitLabProject, loc GitLabCursorLocation, err error) {
+func GetRepositories(ctx context.Context, gLab *gitutils.GitService, pagedSearch *GitLabPagedSearch) (projects []GitLabProject, loc GitLabCursorLocation, err error) {
 
 	if pagedSearch.First < 1 {
 		pagedSearch.First = 7 //conservatively push up the number of projects retrieved if they forgot to set First parameter

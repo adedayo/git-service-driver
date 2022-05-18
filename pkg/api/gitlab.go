@@ -8,14 +8,18 @@ import (
 	"strconv"
 	"strings"
 
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 	"github.com/adedayo/checkmate-core/pkg/util"
-	model "github.com/adedayo/git-service-driver/pkg"
 	"github.com/adedayo/git-service-driver/pkg/gitlab"
 )
 
 func discoverGitLab(w http.ResponseWriter, r *http.Request) {
 
-	config := configManager.GetConfig()
+	config, err := configManager.GetConfig()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	var pagedSearch gitlab.GitLabPagedSearch
 
 	if err := json.NewDecoder(r.Body).Decode(&pagedSearch); err != nil {
@@ -70,7 +74,7 @@ func getCount(loc gitlab.GitLabCursorLocation) int64 {
 }
 
 func integrateGitLab(w http.ResponseWriter, r *http.Request) {
-	var detail model.GitService
+	var detail gitutils.GitService
 	if err := json.NewDecoder(r.Body).Decode(&detail); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -79,13 +83,17 @@ func integrateGitLab(w http.ResponseWriter, r *http.Request) {
 	detail.GraphQLEndPoint = detail.InstanceURL + "/api/graphql"
 	detail.APIEndPoint = detail.InstanceURL + "/api"
 	detail.ID = util.NewRandomUUID().String()
-	detail.Type = model.GitLab
-	config := configManager.GetConfig()
+	detail.Type = gitutils.GitLab
+	config, err := configManager.GetConfig()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	if err := config.AddService(&detail); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	json.NewEncoder(w).Encode(listIntegrations(model.GitLab))
+	json.NewEncoder(w).Encode(listIntegrations(gitutils.GitLab))
 }
 
 func deleteGitLabIntegration(w http.ResponseWriter, r *http.Request) {
@@ -97,12 +105,16 @@ func deleteGitLabIntegration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config := configManager.GetConfig()
-	delete(config.GitServices[model.GitLab], id.ID)
+	config, err := configManager.GetConfig()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	delete(config.GitServices[gitutils.GitLab], id.ID)
 	configManager.SaveConfig(config)
-	json.NewEncoder(w).Encode(listIntegrations(model.GitLab))
+	json.NewEncoder(w).Encode(listIntegrations(gitutils.GitLab))
 }
 
 func getGitLabIntegrations(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(listIntegrations(model.GitLab))
+	json.NewEncoder(w).Encode(listIntegrations(gitutils.GitLab))
 }

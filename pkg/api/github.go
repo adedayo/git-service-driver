@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"strings"
 
+	gitutils "github.com/adedayo/checkmate-core/pkg/git"
+
 	"github.com/adedayo/checkmate-core/pkg/util"
-	model "github.com/adedayo/git-service-driver/pkg"
 	"github.com/adedayo/git-service-driver/pkg/github"
 )
 
 func integrateGitHub(w http.ResponseWriter, r *http.Request) {
-	var detail model.GitService
+	var detail gitutils.GitService
 	if err := json.NewDecoder(r.Body).Decode(&detail); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -21,15 +22,19 @@ func integrateGitHub(w http.ResponseWriter, r *http.Request) {
 	detail.GraphQLEndPoint = "https://api.github.com/graphql"
 	detail.APIEndPoint = "https://api.github.com"
 	detail.ID = util.NewRandomUUID().String()
-	detail.Type = model.GitHub
+	detail.Type = gitutils.GitHub
 	// fmt.Printf("Got Integration: %#v\n", detail)
-	config := configManager.GetConfig()
+	config, err := configManager.GetConfig()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	config.AddService(&detail)
-	json.NewEncoder(w).Encode(listIntegrations(model.GitHub))
+	json.NewEncoder(w).Encode(listIntegrations(gitutils.GitHub))
 }
 
 func getGitHubIntegrations(w http.ResponseWriter, r *http.Request) {
-	json.NewEncoder(w).Encode(listIntegrations(model.GitHub))
+	json.NewEncoder(w).Encode(listIntegrations(gitutils.GitHub))
 }
 
 func deleteGitHubIntegration(w http.ResponseWriter, r *http.Request) {
@@ -41,15 +46,24 @@ func deleteGitHubIntegration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config := configManager.GetConfig()
-	delete(config.GitServices[model.GitHub], id.ID)
+	config, err := configManager.GetConfig()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	delete(config.GitServices[gitutils.GitHub], id.ID)
 	configManager.SaveConfig(config)
-	json.NewEncoder(w).Encode(listIntegrations(model.GitHub))
+	json.NewEncoder(w).Encode(listIntegrations(gitutils.GitHub))
 }
 
 func discoverGitHub(w http.ResponseWriter, r *http.Request) {
 
-	config := configManager.GetConfig()
+	config, err := configManager.GetConfig()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	var pagedSearch github.GitHubPagedSearch
 
 	if err := json.NewDecoder(r.Body).Decode(&pagedSearch); err != nil {
