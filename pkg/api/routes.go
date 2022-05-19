@@ -53,6 +53,7 @@ func getRoutes(pm projects.ProjectManager) *mux.Router {
 func GetRoutes(pm projects.ProjectManager) []RouteSpec {
 	cm, err := pm.GetGitConfigManager()
 	if err != nil {
+		log.Printf("Error getting Git config manager. Disabling Git integration: %v", err)
 		return []RouteSpec{}
 	}
 	configManager = cm
