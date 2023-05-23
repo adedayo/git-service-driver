@@ -50,4 +50,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-// replace github.com/adedayo/checkmate-core v0.8.8 => ../checkmate-core
+replace github.com/adedayo/checkmate-core v0.9.0 => ../checkmate-core

@@ -21,6 +21,24 @@ const (
 		}
 	  }	  
 	`
+
+	singleProjectQuery = `{
+		search(query: "repo:%s/%s", type: REPOSITORY, first: 10) {
+			repositoryCount
+			edges {
+			  node {
+				... on Repository {
+				  name
+				  id
+				  isArchived
+				  url
+				  isDisabled
+				}
+			  }
+			}
+		  }
+	  }
+`
 )
 
 type GitHubProject struct {

@@ -24,29 +24,50 @@ const (
 		  }
 	`
 
-// 	projectsQuery = `{
-// 		projects(first: %d, after: "%s") {
-// 		  nodes {
-// 			name
-// 			description
-// 			id
-// 			archived
-// 			httpUrlToRepo
-// 			repository {
-// 			  branchNames(offset: 0, searchPattern: "*", limit: 1000)
-// 			}
-// 			group {
-// 			  id
-// 			  name
-// 			  description
-// 			}
-// 		  }
-// 		  pageInfo {
-// 			endCursor
-// 			hasNextPage
-// 		  }
-// 		}
-// 	  }
+	singleProjectQuery = `{
+		projects(search: "%s") {
+		  nodes {
+			name
+			id
+			archived
+			httpUrlToRepo
+			group {
+			  id
+			  name
+			}
+		  }
+		  pageInfo {
+			endCursor
+			hasNextPage
+		  }
+		}
+	  }
+`
+
+//	projectsQuery = `{
+//		projects(first: %d, after: "%s") {
+//		  nodes {
+//			name
+//			description
+//			id
+//			archived
+//			httpUrlToRepo
+//			repository {
+//			  branchNames(offset: 0, searchPattern: "*", limit: 1000)
+//			}
+//			group {
+//			  id
+//			  name
+//			  description
+//			}
+//		  }
+//		  pageInfo {
+//			endCursor
+//			hasNextPage
+//		  }
+//		}
+//	  }
+//
 // `
 )
 

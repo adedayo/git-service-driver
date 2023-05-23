@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	gitutils "github.com/adedayo/checkmate-core/pkg/git"
+	"github.com/adedayo/checkmate-core/pkg/projects"
 )
 
 func GetRepositories(ctx context.Context, gHub *gitutils.GitService, pagedSearch *GitHubPagedSearch) (projects []GitHubProject, loc GitHubCursorLocation, err error) {
@@ -59,4 +61,40 @@ type GitHubCursorLocation struct {
 	EndCursor   string
 	HasNextPage bool
 	TotalCount  int64
+}
+
+func GetGitHubRepositoryStatus(ctx context.Context, gHub *gitutils.GitService, repo *projects.Repository) (project GitHubProject, err error) {
+
+	owner, name := getRepositoryOwnerAndName(repo.Location)
+	query := fmt.Sprintf(singleProjectQuery, owner, name)
+	projs, err := searchProject(ctx, query, gHub)
+
+	if err != nil {
+		return
+	}
+
+	for _, ghp := range projs.Nodes {
+		url := ghp.Url
+		o, n := getRepositoryOwnerAndName(url)
+		if o == owner && n == name {
+			return ghp, nil
+		}
+	}
+
+	return project, fmt.Errorf("cannot find GitHub project %s", repo.Location)
+}
+
+func getRepositoryOwnerAndName(repo string) (string, string) {
+
+	owner, name := "", ""
+
+	tokens := strings.Split(repo, "/")
+
+	if len(tokens) > 1 {
+		name = strings.TrimSuffix(tokens[len(tokens)-1], ".git")
+		owner = tokens[len(tokens)-2]
+	}
+
+	return owner, name
+
 }

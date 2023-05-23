@@ -6,6 +6,7 @@ import (
 	"log"
 
 	gitutils "github.com/adedayo/checkmate-core/pkg/git"
+	"github.com/adedayo/checkmate-core/pkg/projects"
 )
 
 func GetRepositories(ctx context.Context, gLab *gitutils.GitService, pagedSearch *GitLabPagedSearch) (projects []GitLabProject, loc GitLabCursorLocation, err error) {
@@ -27,6 +28,21 @@ func GetRepositories(ctx context.Context, gLab *gitutils.GitService, pagedSearch
 				break
 			}
 			pagedSearch.NextCursor = loc.EndCursor
+		}
+	}
+
+	return
+}
+
+func GetGitLabRepositoryStatus(ctx context.Context, gLab *gitutils.GitService, repo *projects.Repository) (project GitLabProject, err error) {
+
+	query := fmt.Sprintf(singleProjectQuery, getRepositoryName(repo.Location))
+	projs, err := queryProjects(ctx, query, gLab)
+
+	for _, glp := range projs.Nodes {
+		if glp.HttpUrlToRepo == repo.Location {
+			project = glp
+			return
 		}
 	}
 

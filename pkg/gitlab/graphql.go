@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	gitutils "github.com/adedayo/checkmate-core/pkg/git"
 	"golang.org/x/net/context/ctxhttp"
@@ -53,4 +54,15 @@ func queryProjects(ctx context.Context, query string, gitService *gitutils.GitSe
 		projects = out.Data.Projects
 	}
 	return
+}
+
+// retrieve the repository name from the url e.g. https://gitlab.com/adedayo/checkmate.git returns checkmate
+func getRepositoryName(url string) string {
+	tokens := strings.Split(url, "/")
+
+	if len(tokens) > 0 {
+		name := strings.TrimSuffix(tokens[len(tokens)-1], ".git")
+		return name
+	}
+	return url
 }
