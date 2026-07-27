@@ -1,9 +1,9 @@
 module github.com/adedayo/git-service-driver
 
-go 1.19
+go 1.26.1
 
 require (
-	github.com/adedayo/checkmate-core v0.9.3
+	github.com/adedayo/checkmate-core v0.9.4
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/mitchellh/go-homedir v1.1.0
@@ -51,3 +51,5 @@ require (
 )
 
 // replace github.com/adedayo/checkmate-core v0.9.3 => ../checkmate-core
+
+replace github.com/adedayo/checkmate-core v0.9.4 => ../checkmate-core
