@@ -3,7 +3,7 @@ module github.com/adedayo/git-service-driver
 go 1.26.1
 
 require (
-	github.com/adedayo/checkmate-core v1.0.11
+	github.com/adedayo/checkmate-core v1.0.12
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/mitchellh/go-homedir v1.1.0
@@ -47,7 +47,3 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/adedayo/checkmate-core => ../checkmate-core
-
-replace github.com/adedayo/git-service-driver => ../git-service-driver
